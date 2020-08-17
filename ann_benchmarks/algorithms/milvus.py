@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import json
 import milvus
 import numpy
 import sklearn.preprocessing
@@ -14,6 +15,11 @@ class Milvus(BaseANN):
         self._milvus.connect(host='localhost', port='19530')
         self._table_name = 'test01'
         self._index_type = index_type
+
+    def get_memory_usage(self):
+        _, reply = self._milvus._cmd("get_system_info")
+        info = json.loads(reply)
+        return int(info["memory_used"]) / 1024
 
     def fit(self, X):
         if self._metric == 'angular':

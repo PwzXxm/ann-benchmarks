@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import json
 import time
 import milvus
 import numpy
@@ -14,6 +15,11 @@ class MilvusAnnoy(BaseANN):
         self._milvus = milvus.Milvus(host='localhost', port='19530', try_connect=False, pre_ping=False)
         import uuid
         self._table_name = 'test_' + str(uuid.uuid1()).replace('-', '_')
+
+    def get_memory_usage(self):
+        _, reply = self._milvus._cmd("get_system_info")
+        info = json.loads(reply)
+        return int(info["memory_used"]) / 1024
 
     def fit(self, X):
         if self._metric == milvus.MetricType.IP:
