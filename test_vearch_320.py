@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 import h5py
 import numpy
-from ann_benchmarks.algorithms.vearch_320 import VearchIVFPQ, VearchHNSW, VearchIVFFLAT
+from ann_benchmarks.algorithms.vearch_320 import VearchIVFPQ, VearchHNSW, VearchIVFFLAT, VearchGPU
 
 
 def compute_recall(std, answer):
@@ -15,6 +15,7 @@ def compute_recall(std, answer):
 
 
 dataset = 'sift-10000-10'
+# dataset = 'sift-10m'
 
 
 def test_hnsw():
@@ -87,7 +88,32 @@ def test_ivfflat():
     f.close()
 
 
+def test_gpu():
+    ncentroids = 128
+    client = VearchGPU(ncentroids)
+    f = h5py.File('data/' + dataset + '.hdf5', 'r')
+    vectors = numpy.array(f['train'])
+    # client.fit(vectors)
+    # client._create_index()
+    qs = numpy.array(f['test'])
+    topk = 10
+    nprobe = 200
+    client.set_query_arguments(nprobe)
+    client.batch_query(qs, topk)
+    ids = client.get_batch_results()
+    # print(ids)
+    stds = numpy.array(f['neighbors'])
+    recall = 0.0
+    for i in range(len(ids)):
+        print("recall: ", compute_recall(stds[i], ids[i]))
+        recall += compute_recall(stds[i], ids[i])
+    print("average recall: ", recall / len(ids))
+    client.done()
+    f.close()
+
+
 if __name__ == "__main__":
     # test_hnsw()
     # test_ivfpq()
-    test_ivfflat()
+    # test_ivfflat()
+    test_gpu()

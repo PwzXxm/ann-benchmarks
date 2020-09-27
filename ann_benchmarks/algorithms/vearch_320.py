@@ -150,6 +150,14 @@ class Vearch(BaseANN):
     def get_batch_results(self):
         return self._res
 
+    def _create_index(self):
+        url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_forcemerge'
+        response = requests.post(url)
+        _check_response(response)
+        if not response.json()['_shards']:
+            return False
+        return response.json()['_shards']["successful"] == 1
+
     def done(self):
         self._drop_table()
         self._drop_db()
@@ -406,3 +414,92 @@ class VearchHNSW(Vearch):
                 # ", partition_num: " + str(self._partition_num) +
                 # ", replica_num: " + str(self._replica_num) +
                 ", metric_type: " + str(self._metric_type))
+
+
+class VearchGPU(Vearch):
+    def __init__(self, ncentroids, nsubvector=64, partition_num=1, replica_num=1, metric_type='L2', nbits_per_idx=8):
+        Vearch.__init__(self)
+        self._ncentroids = ncentroids
+        self._nsubvector = 64
+        self._partition_num = partition_num
+        self._replica_num = replica_num
+        self._metric_type = metric_type
+        self._nbits_per_idx = nbits_per_idx
+
+    def fit(self, X):
+        self._create_db()
+        max_size = X.shape[0]
+        index_size = min(max_size, self._ncentroids * 128)
+        dimension = X.shape[1]
+        retrieval_type = "GPU"
+        retrieval_param = {
+            "ncentroids": self._ncentroids,
+            "nsubvector": self._nsubvector,
+            "nbits_per_idx": self._nbits_per_idx,
+            "metric_type": self._metric_type,
+        }
+        payload = {
+            "name": self._table_name,
+            "partition_num": self._partition_num,
+            "replica_num": self._replica_num,
+            "engine": {
+                "name": "gamma",
+                "index_size": 0,
+                "max_size": max_size,
+                "retrieval_type": retrieval_type,
+                "retrieval_param": retrieval_param
+            },
+            "properties": {
+                self._field: {
+                    "type": "vector",
+                    "index": True,
+                    "dimension": dimension,
+                    "store_type": "MemoryOnly",
+                }
+            }
+        }
+        self._create_table(payload)
+        self._bulk_insert(X)
+        # self._single_insert(X)
+        self._create_index()
+
+    def set_query_arguments(self, nprobe):
+        # nprobe <= 1024/2048
+        self._nprobe = min(nprobe, self._ncentroids)
+
+    def batch_query(self, X, n):
+        features = []
+        for vector in X:
+            features += vector.tolist()
+            # features.append(vector.tolist())
+        payload = {
+            "query": {
+                "sum": [{
+                    "field": self._field,
+                    "feature": features,
+                }]
+            },
+            "size": n,
+            "sort": [{
+                "_score": {"order": "asc"}
+            }],
+            "retrieval_params": {
+                "parallel_on_queries": 0,
+                "recall_num": n,  # should equal to size here
+                "nprobe": self._nprobe,
+                "metric_type": "L2"
+            }
+        }
+        self._batch_query_with_payload(payload)
+
+    def __str__(self):
+        return ("VearchIVFPQ" +
+                ", ncentroids: " + str(self._ncentroids) +
+                ", nprobe: " + str(self._nprobe) +
+                ", nsubvector: " + str(self._nsubvector) +
+                # ", master: " + self._master_prefix +
+                # ", router: " + self._router_prefix +
+                # ", partition_num: " + str(self._partition_num) +
+                # ", replica_num: " + str(self._replica_num) +
+                ", metric_type: " + str(self._metric_type) +
+                ", nbits_per_idx: " + str(self._nbits_per_idx))
