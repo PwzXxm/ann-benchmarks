@@ -5,10 +5,12 @@ import numpy
 import requests
 from ann_benchmarks.algorithms.base import BaseANN
 
+
 def _check_response(response):
     if response.status_code != 200:
         print(response.text)
         raise Exception('status is not expected')
+
 
 def _name_in_dict_list(dlist, name):
     for d in dlist:
@@ -16,19 +18,20 @@ def _name_in_dict_list(dlist, name):
             return True
     return False
 
+
 class Vearch(BaseANN):
     def __init__(self):
         self._db_name = 'annbench'
-        self._table_name = 'annbench'
+        self._table_name = 'annbench1'
         self._field = 'field1'
-        self._master_host = '172.16.0.251'
-        self._master_port = '443'
+        # self._master_host = '172.16.0.251'
+        # self._master_port = '443'
         self._master_host = 'localhost'
-        self._master_port = '8817' # docker
-        self._router_host = '172.16.0.251'
-        self._router_port = '80'
+        self._master_port = '8817'  # docker
+        # self._router_host = '172.16.0.251'
+        # self._router_port = '80'
         self._router_host = 'localhost'
-        self._router_port = '9001' # docker
+        self._router_port = '9001'  # docker
         self._master_prefix = 'http://' + self._master_host + ':' + self._master_port
         self._router_prefix = 'http://' + self._router_host + ':' + self._router_port
 
@@ -138,8 +141,9 @@ class Vearch(BaseANN):
                         _print_all_key(value, indent + 1)
                     if isinstance(value, list) and value:
                         _print_all_key(value[0], indent + 1)
-            _print_all_key(response.json())
 
+            _print_all_key(response.json())
+            print(response.json())
             self._res = [[int(hit['_id']) for hit in results['hits']['hits']]
                          for results in response.json()['results']]
 
@@ -153,6 +157,7 @@ class Vearch(BaseANN):
 
     def __str__(self):
         return "Vearch"
+
 
 class VearchIVFPQ(Vearch):
     def __init__(self, ncentroids, nsubvector=64, partition_num=1, replica_num=1, metric_type='L2', nbits_per_idx=8):
@@ -207,6 +212,7 @@ class VearchIVFPQ(Vearch):
         features = []
         for vector in X:
             features += vector.tolist()
+            # features.append(vector.tolist())
         payload = {
             "query": {
                 "sum": [{
@@ -220,7 +226,7 @@ class VearchIVFPQ(Vearch):
             }],
             "retrieval_params": {
                 "parallel_on_queries": 0,
-                "recall_num": n, # should equal to size here
+                "recall_num": n,  # should equal to size here
                 "nprobe": self._nprobe,
                 "metric_type": "L2"
             }
@@ -238,6 +244,7 @@ class VearchIVFPQ(Vearch):
                 # ", replica_num: " + str(self._replica_num) +
                 ", metric_type: " + str(self._metric_type) +
                 ", nbits_per_idx: " + str(self._nbits_per_idx))
+
 
 class VearchIVFFLAT(Vearch):
     def __init__(self, ncentroids, partition_num=1, replica_num=1, metric_type='L2'):
@@ -274,7 +281,7 @@ class VearchIVFFLAT(Vearch):
                     "type": "vector",
                     "index": True,
                     "dimension": dimension,
-                    "store_type": "RocksDB",
+                    # "store_type": "RocksDB",
                 }
             }
         }
@@ -287,6 +294,7 @@ class VearchIVFFLAT(Vearch):
     def batch_query(self, X, n):
         features = []
         for vector in X:
+            # features.append(vector.tolist())
             features += vector.tolist()
         payload = {
             "query": {
@@ -316,6 +324,7 @@ class VearchIVFFLAT(Vearch):
                 # ", partition_num: " + str(self._partition_num) +
                 # ", replica_num: " + str(self._replica_num) +
                 ", metric_type: " + str(self._metric_type))
+
 
 class VearchHNSW(Vearch):
     def __init__(self, nlinks, efConstruction, partition_num=1, replica_num=1, metric_type='L2'):

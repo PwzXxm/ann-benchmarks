@@ -5,6 +5,7 @@ import h5py
 import numpy
 from ann_benchmarks.algorithms.vearch_320 import VearchIVFPQ, VearchHNSW, VearchIVFFLAT
 
+
 def compute_recall(std, answer):
     hit_nums = 0.0
     for neighbor in answer:
@@ -12,7 +13,9 @@ def compute_recall(std, answer):
             hit_nums += 1
     return hit_nums / len(answer)
 
-dataset = 'sift-100000-1000'
+
+dataset = 'sift-10000-10'
+
 
 def test_hnsw():
     nlinks = 32
@@ -37,6 +40,7 @@ def test_hnsw():
     client.done()
     f.close()
 
+
 def test_ivfpq():
     ncentroids = 8192
     client = VearchIVFPQ(ncentroids)
@@ -59,14 +63,15 @@ def test_ivfpq():
     client.done()
     f.close()
 
+
 def test_ivfflat():
     ncentroids = 8192
     client = VearchIVFFLAT(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
-    qs = numpy.array(f['test'])
-    topk = 2
+    qs = numpy.array([f['test'][0]])
+    topk = 100
     nprobe = 200
     client.set_query_arguments(nprobe)
     client.batch_query(qs, topk)
@@ -81,7 +86,8 @@ def test_ivfflat():
     client.done()
     f.close()
 
+
 if __name__ == "__main__":
-    test_hnsw()
-    test_ivfpq()
+    # test_hnsw()
+    # test_ivfpq()
     test_ivfflat()

@@ -5,6 +5,7 @@ from ann_benchmarks import datasets
 TRAIN_SIZE = 10000
 QUERY_NUM = 10
 
+
 def my_write_output(train, test, out_fn, distance, point_type='float', count=100):
     from ann_benchmarks.algorithms.bruteforce import BruteForceBLAS
     n = 0
@@ -39,17 +40,20 @@ def my_write_output(train, test, out_fn, distance, point_type='float', count=100
         distances[i] = [d for _, d in res]
     f.close()
 
+
 def my_sift(fn, out_fn):
     with tarfile.open(fn, 'r:gz') as t:
         train = datasets._get_irisa_matrix(t, 'sift/sift_base.fvecs')
         test = datasets._get_irisa_matrix(t, 'sift/sift_query.fvecs')
         my_write_output(train, test, out_fn, 'euclidean')
 
+
 def main():
     fn = 'data/sift.tar.gz'
     out_fn = 'data/sift-%d-%d.hdf5' % (TRAIN_SIZE, QUERY_NUM)
     print("fn: ", fn, ", out_fn: ", out_fn)
     my_sift(fn, out_fn)
+
 
 if __name__ == "__main__":
     main()
