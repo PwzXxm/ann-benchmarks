@@ -13,7 +13,7 @@ class Sptag(BaseANN):
         self._sptag = SPTAG.AnnIndex(self._algo, 'Float', X.shape[1])
         import psutil
         cpu_count = psutil.cpu_count()
-        self._sptag.SetBuildParam("NumberOfThreads", cpu_count)
+        self._sptag.SetBuildParam("NumberOfThreads", str(cpu_count))
         self._sptag.SetBuildParam("DistCalcMethod", self._metric)
         self._sptag.Build(X, X.shape[0])
 
