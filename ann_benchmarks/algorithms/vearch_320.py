@@ -8,7 +8,7 @@ from ann_benchmarks.algorithms.base import BaseANN
 
 def _check_response(response):
     if response.status_code != 200:
-        print(response.text)
+        # print(response.text)
         raise Exception('status is not expected')
 
 
@@ -131,7 +131,6 @@ class Vearch(BaseANN):
         print("query: ", url, ", status: ", response.status_code)
         _check_response(response)
         if response.json():
-            # print(response.json())
             def _print_all_key(kv, indent=0):
                 if not isinstance(kv, dict):
                     return
@@ -141,9 +140,6 @@ class Vearch(BaseANN):
                         _print_all_key(value, indent + 1)
                     if isinstance(value, list) and value:
                         _print_all_key(value[0], indent + 1)
-
-            _print_all_key(response.json())
-            print(response.json())
             self._res = [[int(hit['_id']) for hit in results['hits']['hits']]
                          for results in response.json()['results']]
 
