@@ -1,5 +1,5 @@
 float:
-  any:
+  angular:
     vearch-ivfflat:
       docker-tag: nothing-use-local
       module: ann_benchmarks.algorithms.vearch_320

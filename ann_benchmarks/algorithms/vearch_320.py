@@ -173,7 +173,10 @@ class VearchIVFPQ(Vearch):
         self._nsubvector = 64
         self._partition_num = partition_num
         self._replica_num = replica_num
-        self._metric_type = metric_type
+        if metric_type == 'L2':
+            self._metric_type = 'L2'
+        else:
+            self._metric_type = 'InnerProduct'
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
@@ -260,7 +263,10 @@ class VearchIVFFLAT(Vearch):
         self._ncentroids = ncentroids
         self._partition_num = partition_num
         self._replica_num = replica_num
-        self._metric_type = metric_type
+        if metric_type == 'L2':
+            self._metric_type = 'L2'
+        else:
+            self._metric_type = 'InnerProduct'
 
     def fit(self, X):
         self._create_db()
@@ -340,7 +346,10 @@ class VearchHNSW(Vearch):
         Vearch.__init__(self)
         self._partition_num = partition_num
         self._replica_num = replica_num
-        self._metric_type = metric_type
+        if metric_type == 'L2':
+            self._metric_type = 'L2'
+        else:
+            self._metric_type = 'InnerProduct'
         self._nlinks = nlinks
         self._efConstruction = efConstruction
 
@@ -425,7 +434,10 @@ class VearchGPU(Vearch):
         self._nsubvector = 64
         self._partition_num = partition_num
         self._replica_num = replica_num
-        self._metric_type = metric_type
+        if metric_type == 'L2':
+            self._metric_type = 'L2'
+        else:
+            self._metric_type = 'InnerProduct'
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
