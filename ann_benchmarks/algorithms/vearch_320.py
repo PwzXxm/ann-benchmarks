@@ -167,7 +167,7 @@ class Vearch(BaseANN):
 
 
 class VearchIVFPQ(Vearch):
-    def __init__(self, ncentroids, nsubvector=64, partition_num=1, replica_num=1, metric_type='L2', nbits_per_idx=8):
+    def __init__(self, metric_type, ncentroids, nsubvector=64, partition_num=1, replica_num=1, nbits_per_idx=8):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
         self._nsubvector = 64
@@ -236,7 +236,7 @@ class VearchIVFPQ(Vearch):
                 "parallel_on_queries": 0,
                 "recall_num": n,  # should equal to size here
                 "nprobe": self._nprobe,
-                "metric_type": "L2"
+                "metric_type": self._metric_type
             }
         }
         self._batch_query_with_payload(payload)
@@ -255,7 +255,7 @@ class VearchIVFPQ(Vearch):
 
 
 class VearchIVFFLAT(Vearch):
-    def __init__(self, ncentroids, partition_num=1, replica_num=1, metric_type='L2'):
+    def __init__(self, metric_type, ncentroids, partition_num=1, replica_num=1):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
         self._partition_num = partition_num
@@ -319,7 +319,7 @@ class VearchIVFFLAT(Vearch):
             "retrieval_params": {
                 "parallel_on_queries": 0,
                 "nprobe": self._nprobe,
-                "metric_type": "L2"
+                "metric_type": self._metric_type
             }
         }
         self._batch_query_with_payload(payload)
@@ -336,7 +336,7 @@ class VearchIVFFLAT(Vearch):
 
 
 class VearchHNSW(Vearch):
-    def __init__(self, nlinks, efConstruction, partition_num=1, replica_num=1, metric_type='L2'):
+    def __init__(self, metric_type, nlinks, efConstruction, partition_num=1, replica_num=1):
         Vearch.__init__(self)
         self._partition_num = partition_num
         self._replica_num = replica_num
@@ -400,7 +400,7 @@ class VearchHNSW(Vearch):
                 "_score": {"order": "asc"}
             }],
             "retrieval_params": {
-                "metric_type": "L2",
+                "metric_type": self._metric_type,
                 "efSearch": self._efSearch,
             }
         }
@@ -419,7 +419,7 @@ class VearchHNSW(Vearch):
 
 
 class VearchGPU(Vearch):
-    def __init__(self, ncentroids, nsubvector=64, partition_num=1, replica_num=1, metric_type='L2', nbits_per_idx=8):
+    def __init__(self, metric_type, ncentroids, nsubvector=64, partition_num=1, replica_num=1, nbits_per_idx=8):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
         self._nsubvector = 64
@@ -489,7 +489,7 @@ class VearchGPU(Vearch):
                 "parallel_on_queries": 0,
                 "recall_num": n,  # should equal to size here
                 "nprobe": self._nprobe,
-                "metric_type": "L2"
+                "metric_type": self._metric_type
             }
         }
         self._batch_query_with_payload(payload)

@@ -1,9 +1,10 @@
 float:
-  euclidean:
+  any:
     vearch-hnsw:
       docker-tag: nothing-use-local
       module: ann_benchmarks.algorithms.vearch_320
       constructor: VearchHNSW
+      base-args: ["@metric"]
       run-groups:
         # nlinks, efConstruction, efSearch
         for-high-test:

@@ -1,9 +1,10 @@
 float:
-  euclidean:
+  any:
     vearch-ivfpq:
       docker-tag: nothing-use-local
       module: ann_benchmarks.algorithms.vearch_320
       constructor: VearchIVFPQ
+      base-args: ["@metric"]
       run-groups:
         nlist-8192:
           args: [[8192, 4096, 2048, 1024, 512], [32, 64]]
