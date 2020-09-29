@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import h5py
 import numpy
+import time
 from ann_benchmarks.algorithms.vearch_320 import VearchIVFPQ, VearchHNSW, VearchIVFFLAT, VearchGPU
 
 
@@ -17,21 +18,26 @@ def compute_recall(std, answer):
 dataset = 'sift-10000-10'
 # dataset = 'sift-10m'
 
+# metric_type = 'angular'
+metric_type = 'L2'
+
 
 def test_hnsw():
     nlinks = 32
     efConstruction = 40
-    client = VearchHNSW(nlinks, efConstruction)
+    client = VearchHNSW(metric_type, nlinks, efConstruction)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
+    client._create_index()
+    time.sleep(2)
     qs = numpy.array(f['test'])
     topk = 10
     efSearch = 64
     client.set_query_arguments(efSearch)
     client.batch_query(qs, topk)
     ids = client.get_batch_results()
-    # print(ids)
+    print(ids)
     stds = numpy.array(f['neighbors'])
     recall = 0.0
     for i in range(len(ids)):
@@ -44,7 +50,7 @@ def test_hnsw():
 
 def test_ivfpq():
     ncentroids = 128
-    client = VearchIVFPQ(ncentroids)
+    client = VearchIVFPQ(metric_type, ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
@@ -68,7 +74,7 @@ def test_ivfpq():
 
 def test_ivfflat():
     ncentroids = 256
-    client = VearchIVFFLAT(ncentroids)
+    client = VearchIVFFLAT(metric_type, ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     # client.fit(vectors)
@@ -93,7 +99,7 @@ def test_ivfflat():
 
 def test_gpu():
     ncentroids = 128
-    client = VearchGPU(ncentroids)
+    client = VearchGPU(metric_type, ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
@@ -114,13 +120,12 @@ def test_gpu():
         recall += compute_recall(stds[i], ids[i])
     print("average recall: ", recall / len(ids))
 
-
     # client.done()
     f.close()
 
 
 if __name__ == "__main__":
-    # test_hnsw()
+    test_hnsw()
     # test_ivfpq()
     # test_ivfflat()
-    test_gpu()
+    # test_gpu()
