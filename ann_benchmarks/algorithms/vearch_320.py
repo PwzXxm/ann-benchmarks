@@ -131,6 +131,7 @@ class Vearch(BaseANN):
         print("query: ", url, ", status: ", response.status_code)
         _check_response(response)
         if response.json():
+            # print(response.json())
             def _print_all_key(kv, indent=0):
                 if not isinstance(kv, dict):
                     return
@@ -149,6 +150,7 @@ class Vearch(BaseANN):
     def _create_index(self):
         url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_forcemerge'
         response = requests.post(url)
+        print("create index : ", url, ", status: ", response.status_code)
         _check_response(response)
         if not response.json()['_shards']:
             return False
@@ -285,7 +287,7 @@ class VearchIVFFLAT(Vearch):
                     "type": "vector",
                     "index": True,
                     "dimension": dimension,
-                    # "store_type": "RocksDB",
+                    "store_type": "RocksDB",
                 }
             }
         }

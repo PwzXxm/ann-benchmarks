@@ -43,57 +43,11 @@ def test_hnsw():
 
 
 def test_ivfpq():
-    ncentroids = 8192
+    ncentroids = 128
     client = VearchIVFPQ(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
-    client.fit(vectors)
-    qs = numpy.array(f['test'])
-    topk = 10
-    nprobe = 200
-    client.set_query_arguments(nprobe)
-    client.batch_query(qs, topk)
-    ids = client.get_batch_results()
-    # print(ids)
-    stds = numpy.array(f['neighbors'])
-    recall = 0.0
-    for i in range(len(ids)):
-        print("recall: ", compute_recall(stds[i], ids[i]))
-        recall += compute_recall(stds[i], ids[i])
-    print("average recall: ", recall / len(ids))
-    client.done()
-    f.close()
-
-
-def test_ivfflat():
-    ncentroids = 8192
-    client = VearchIVFFLAT(ncentroids)
-    f = h5py.File('data/' + dataset + '.hdf5', 'r')
-    vectors = numpy.array(f['train'])
-    client.fit(vectors)
-    qs = numpy.array([f['test'][0]])
-    topk = 100
-    nprobe = 200
-    client.set_query_arguments(nprobe)
-    client.batch_query(qs, topk)
-    ids = client.get_batch_results()
-    # print(ids)
-    stds = numpy.array(f['neighbors'])
-    recall = 0.0
-    for i in range(len(ids)):
-        print("recall: ", compute_recall(stds[i], ids[i]))
-        recall += compute_recall(stds[i], ids[i])
-    print("average recall: ", recall / len(ids))
-    client.done()
-    f.close()
-
-
-def test_gpu():
-    ncentroids = 128
-    client = VearchGPU(ncentroids)
-    f = h5py.File('data/' + dataset + '.hdf5', 'r')
-    vectors = numpy.array(f['train'])
-    client.fit(vectors)
+    # client.fit(vectors)
     # client._create_index()
     qs = numpy.array(f['test'])
     topk = 10
@@ -108,7 +62,60 @@ def test_gpu():
         print("recall: ", compute_recall(stds[i], ids[i]))
         recall += compute_recall(stds[i], ids[i])
     print("average recall: ", recall / len(ids))
-    client.done()
+    # client.done()
+    f.close()
+
+
+def test_ivfflat():
+    ncentroids = 256
+    client = VearchIVFFLAT(ncentroids)
+    f = h5py.File('data/' + dataset + '.hdf5', 'r')
+    vectors = numpy.array(f['train'])
+    # client.fit(vectors)
+    # client._create_index()
+    qs = numpy.array([f['test'][0]])
+    topk = 100
+    nprobe = 200
+    client.set_query_arguments(nprobe)
+    client.batch_query(qs, topk)
+    ids = client.get_batch_results()
+    # print(ids)
+    stds = numpy.array(f['neighbors'])
+    recall = 0.0
+    for i in range(len(ids)):
+        print("recall: ", compute_recall(stds[i], ids[i]))
+        recall += compute_recall(stds[i], ids[i])
+    print("average recall: ", recall / len(ids))
+
+    # client.done()
+    f.close()
+
+
+def test_gpu():
+    ncentroids = 128
+    client = VearchGPU(ncentroids)
+    f = h5py.File('data/' + dataset + '.hdf5', 'r')
+    vectors = numpy.array(f['train'])
+    # client.fit(vectors)
+
+    # client._create_index()
+
+    qs = numpy.array(f['test'])
+    topk = 10
+    nprobe = 200
+    client.set_query_arguments(nprobe)
+    client.batch_query(qs, topk)
+    ids = client.get_batch_results()
+    # print(ids)
+    stds = numpy.array(f['neighbors'])
+    recall = 0.0
+    for i in range(len(ids)):
+        print("recall: ", compute_recall(stds[i], ids[i]))
+        recall += compute_recall(stds[i], ids[i])
+    print("average recall: ", recall / len(ids))
+
+
+    # client.done()
     f.close()
 
 
