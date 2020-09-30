@@ -6,9 +6,9 @@ float:
       constructor: VearchHNSW
       run-groups:
         # nlinks, efConstruction, efSearch
-	    for-high-test1:
-           args: [[48], [500]]
-           query-args: [[50, 80, 120, 200, 400, 600, 800]]
+        for-high-test1:
+          args: [[48], [500]]
+          query-args: [[50, 80, 120, 200, 400, 600, 800]]
         #for-high-test:
         #  args: [[48, 36, 24, 16, 12, 8], [500, 1024]]
         #  query-args: [[50, 80, 120, 200, 400, 600, 800]]
