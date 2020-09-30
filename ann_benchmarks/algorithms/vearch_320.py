@@ -141,6 +141,7 @@ class Vearch(BaseANN):
                         _print_all_key(value, indent + 1)
                     if isinstance(value, list) and value:
                         _print_all_key(value[0], indent + 1)
+
             self._res = [[int(hit['_id']) for hit in results['hits']['hits']]
                          for results in response.json()['results']]
 
@@ -210,6 +211,7 @@ class VearchIVFPQ(Vearch):
         self._create_table(payload)
         self._bulk_insert(X)
         # self._single_insert(X)
+        self._create_index()
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -293,6 +295,7 @@ class VearchIVFFLAT(Vearch):
         }
         self._create_table(payload)
         self._bulk_insert(X)
+        self._create_index()
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -379,6 +382,7 @@ class VearchHNSW(Vearch):
         import time
         time.sleep(60)
         # self._single_insert(X)
+        self._create_index()
 
     def set_query_arguments(self, efSearch):
         self._efSearch = efSearch

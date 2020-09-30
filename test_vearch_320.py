@@ -47,7 +47,7 @@ def test_ivfpq():
     client = VearchIVFPQ(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
-    # client.fit(vectors)
+    client.fit(vectors)
     # client._create_index()
     qs = numpy.array(f['test'])
     topk = 10
@@ -96,7 +96,7 @@ def test_gpu():
     client = VearchGPU(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
-    # client.fit(vectors)
+    client.fit(vectors)
 
     # client._create_index()
 
