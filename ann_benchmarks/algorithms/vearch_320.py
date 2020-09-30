@@ -22,7 +22,7 @@ def _name_in_dict_list(dlist, name):
 class Vearch(BaseANN):
     def __init__(self):
         self._db_name = 'annbench'
-        self._table_name = 'annbench1'
+        self._table_name = 'annbench'
         self._field = 'field1'
         # self._master_host = '172.16.0.251'
         # self._master_port = '443'
@@ -67,9 +67,10 @@ class Vearch(BaseANN):
 
     def _create_db(self):
         if self._db_exists():
-            if self._table_exists():
-                self._drop_table()
-            self._drop_db()
+            # if self._table_exists():
+            #     self._drop_table()
+            # self._drop_db()
+            return
         url = self._master_prefix + '/db/_create'
         response = requests.put(url, json={"name": self._db_name})
         print("put: ", url, ", status: ", response.status_code)
@@ -77,7 +78,8 @@ class Vearch(BaseANN):
 
     def _create_table(self, payload):
         if self._table_exists():
-            self._drop_table()
+            # self._drop_table()
+            return
         url = self._master_prefix + '/space/' + self._db_name + '/_create'
         response = requests.put(url, json=payload)
         print("create table: ", url)
@@ -158,8 +160,8 @@ class Vearch(BaseANN):
         return response.json()['_shards']["successful"] == 1
 
     def done(self):
-        self._drop_table()
-        self._drop_db()
+        # self._drop_table()
+        # self._drop_db()
         return
 
     def __str__(self):
@@ -267,6 +269,7 @@ class VearchIVFFLAT(Vearch):
             self._metric_type = 'L2'
         else:
             self._metric_type = 'InnerProduct'
+        self._table_name = f"{self._table_name}-{ncentroids}"
 
     def fit(self, X):
         self._create_db()
@@ -353,6 +356,7 @@ class VearchHNSW(Vearch):
             self._metric_type = 'InnerProduct'
         self._nlinks = nlinks
         self._efConstruction = efConstruction
+        self._table_name = f"{self._table_name}-{nlinks}-{efConstruction}"
 
     def fit(self, X):
         self._create_db()
