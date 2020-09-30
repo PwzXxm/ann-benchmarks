@@ -375,6 +375,9 @@ class VearchHNSW(Vearch):
         }
         self._create_table(payload)
         self._bulk_insert(X)
+        self._create_index()
+        import time
+        time.sleep(60)
         # self._single_insert(X)
 
     def set_query_arguments(self, efSearch):
