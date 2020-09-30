@@ -71,8 +71,8 @@ def test_ivfflat():
     client = VearchIVFFLAT(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
-    # client.fit(vectors)
-    # client._create_index()
+    client.fit(vectors)
+    client._create_index()
     qs = numpy.array([f['test'][0]])
     topk = 100
     nprobe = 200
@@ -122,5 +122,5 @@ def test_gpu():
 if __name__ == "__main__":
     # test_hnsw()
     # test_ivfpq()
-    # test_ivfflat()
-    test_gpu()
+    test_ivfflat()
+    # test_gpu()

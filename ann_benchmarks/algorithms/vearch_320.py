@@ -216,7 +216,6 @@ class VearchIVFPQ(Vearch):
         self._bulk_insert(X)
         # self._single_insert(X)
         self._create_index()
-        time.sleep(60)
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -306,7 +305,6 @@ class VearchIVFFLAT(Vearch):
         self._create_table(payload)
         self._bulk_insert(X)
         self._create_index()
-        time.sleep(60)
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -392,7 +390,6 @@ class VearchHNSW(Vearch):
         self._create_table(payload)
         self._bulk_insert(X)
         self._create_index()
-        time.sleep(60)
         # self._single_insert(X)
 
     def set_query_arguments(self, efSearch):
