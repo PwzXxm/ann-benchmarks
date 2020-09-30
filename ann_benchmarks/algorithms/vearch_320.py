@@ -70,11 +70,12 @@ class Vearch(BaseANN):
             # if self._table_exists():
             #     self._drop_table()
             # self._drop_db()
-            return
+            return False
         url = self._master_prefix + '/db/_create'
         response = requests.put(url, json={"name": self._db_name})
         print("put: ", url, ", status: ", response.status_code)
         _check_response(response)
+        return True
 
     def _create_table(self, payload):
         if self._table_exists():
@@ -182,7 +183,8 @@ class VearchIVFPQ(Vearch):
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
-        self._create_db()
+        insert_flag = self._create_db()
+        if not insert_flag: return
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
@@ -269,10 +271,11 @@ class VearchIVFFLAT(Vearch):
             self._metric_type = 'L2'
         else:
             self._metric_type = 'InnerProduct'
-        self._table_name = f"{self._table_name}-{ncentroids}"
+        self._table_name = f"{self._table_name}_{ncentroids}"
 
     def fit(self, X):
-        self._create_db()
+        insert_flag = self._create_db()
+        if not insert_flag: return
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
@@ -356,10 +359,11 @@ class VearchHNSW(Vearch):
             self._metric_type = 'InnerProduct'
         self._nlinks = nlinks
         self._efConstruction = efConstruction
-        self._table_name = f"{self._table_name}-{nlinks}-{efConstruction}"
+        self._table_name = f"{self._table_name}_{nlinks}_{efConstruction}"
 
     def fit(self, X):
-        self._create_db()
+        insert_flag = self._create_db()
+        if not insert_flag: return
         max_size = X.shape[0]
         index_size = 2
         dimension = X.shape[1]
@@ -447,7 +451,8 @@ class VearchGPU(Vearch):
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
-        self._create_db()
+        insert_flag = self._create_db()
+        if not insert_flag: return
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
