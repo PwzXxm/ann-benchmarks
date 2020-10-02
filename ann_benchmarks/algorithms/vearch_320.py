@@ -80,7 +80,7 @@ class Vearch(BaseANN):
     def _create_table(self, payload):
         if self._table_exists():
             # self._drop_table()
-            return
+            return False
         url = self._master_prefix + '/space/' + self._db_name + '/_create'
         response = requests.put(url, json=payload)
         print("create table: ", url)
@@ -183,8 +183,7 @@ class VearchIVFPQ(Vearch):
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
-        insert_flag = self._create_db()
-        if not insert_flag: return
+        self._create_db()
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
@@ -215,7 +214,8 @@ class VearchIVFPQ(Vearch):
                 }
             }
         }
-        self._create_table(payload)
+        insert_flag = self._create_table(payload)
+        if not insert_flag: return
         self._bulk_insert(X)
         # self._single_insert(X)
         self._create_index()
@@ -274,8 +274,7 @@ class VearchIVFFLAT(Vearch):
         self._table_name = f"{self._table_name}_{ncentroids}"
 
     def fit(self, X):
-        insert_flag = self._create_db()
-        if not insert_flag: return
+        self._create_db()
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
@@ -305,7 +304,8 @@ class VearchIVFFLAT(Vearch):
                 }
             }
         }
-        self._create_table(payload)
+        insert_flag = self._create_table(payload)
+        if not insert_flag: return
         self._bulk_insert(X)
         self._create_index()
 
@@ -361,8 +361,7 @@ class VearchHNSW(Vearch):
         self._table_name = f"{self._table_name}_{nlinks}_{efConstruction}"
 
     def fit(self, X):
-        insert_flag = self._create_db()
-        if not insert_flag: return
+        self._create_db()
         max_size = X.shape[0]
         index_size = 2
         dimension = X.shape[1]
@@ -393,7 +392,8 @@ class VearchHNSW(Vearch):
                 }
             }
         }
-        self._create_table(payload)
+        insert_flag = self._create_table(payload)
+        if not insert_flag: return
         self._bulk_insert(X)
         # self._single_insert(X)
         self._create_index()
@@ -449,8 +449,7 @@ class VearchGPU(Vearch):
         self._nbits_per_idx = nbits_per_idx
 
     def fit(self, X):
-        insert_flag = self._create_db()
-        if not insert_flag: return
+        self._create_db()
         max_size = X.shape[0]
         index_size = min(max_size, self._ncentroids * 128)
         dimension = X.shape[1]
@@ -481,7 +480,8 @@ class VearchGPU(Vearch):
                 }
             }
         }
-        self._create_table(payload)
+        insert_flag = self._create_table(payload)
+        if not insert_flag: return
         self._bulk_insert(X)
         # self._single_insert(X)
         self._create_index()
