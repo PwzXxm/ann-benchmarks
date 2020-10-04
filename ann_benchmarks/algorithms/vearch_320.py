@@ -91,6 +91,7 @@ class Vearch(BaseANN):
             print(key, ": ", value)
         print("status: ", response.status_code)
         _check_response(response)
+        return True
 
     def _bulk_insert(self, X):
         url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_bulk'
@@ -169,7 +170,7 @@ class Vearch(BaseANN):
         return "Vearch"
 
 
-class VearchIVFPQ(Vearch):
+class VearchIVFPQ(Vearch)
     def __init__(self, metric_type, ncentroids, nsubvector=64, partition_num=1, replica_num=1, nbits_per_idx=8):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
