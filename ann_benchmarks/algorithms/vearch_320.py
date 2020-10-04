@@ -91,6 +91,7 @@ class Vearch(BaseANN):
             print(key, ": ", value)
         print("status: ", response.status_code)
         _check_response(response)
+        return True
 
     def _bulk_insert(self, X):
         url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_bulk'
