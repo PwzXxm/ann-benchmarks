@@ -170,7 +170,7 @@ class Vearch(BaseANN):
         return "Vearch"
 
 
-class VearchIVFPQ(Vearch)
+class VearchIVFPQ(Vearch):
     def __init__(self, metric_type, ncentroids, nsubvector=64, partition_num=1, replica_num=1, nbits_per_idx=8):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
