@@ -67,27 +67,32 @@ def test_ivfpq():
 
 
 def test_ivfflat():
-    ncentroids = 256
+    ncentroids = 2048
     client = VearchIVFFLAT(ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
-    client._create_index()
+    # client._create_index()
     qs = numpy.array([f['test'][0]])
     topk = 100
-    nprobe = 200
-    client.set_query_arguments(nprobe)
-    client.batch_query(qs, topk)
-    ids = client.get_batch_results()
-    # print(ids)
-    stds = numpy.array(f['neighbors'])
-    recall = 0.0
-    for i in range(len(ids)):
-        print("recall: ", compute_recall(stds[i], ids[i]))
-        recall += compute_recall(stds[i], ids[i])
-    print("average recall: ", recall / len(ids))
+    # nprobe = 200
+    for nprobe in range(10, 2000, 200):
 
-    # client.done()
+        print(f"nprobe: {nprobe}")
+        client.set_query_arguments(nprobe)
+        client.batch_query(qs, topk)
+        ids = client.get_batch_results()
+        # print(ids)
+        stds = numpy.array(f['neighbors'])
+        recall = 0.0
+        for i in range(len(ids)):
+            print("recall: ", compute_recall(stds[i], ids[i]))
+            recall += compute_recall(stds[i], ids[i])
+        print("average recall: ", recall / len(ids))
+        print("\n")
+        import time
+        time.sleep(10)
+    client.done()
     f.close()
 
 
