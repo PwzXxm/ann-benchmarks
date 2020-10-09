@@ -430,7 +430,7 @@ class VearchHNSW(Vearch):
             "sort": [{
                 "_score": {"order": "asc"}
             }],
-            "retrieval_params": {
+            "retrieval_param": {
                 "metric_type": self._metric_type,
                 "efSearch": self._efSearch,
             }
