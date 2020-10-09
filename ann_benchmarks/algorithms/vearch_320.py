@@ -160,9 +160,19 @@ class Vearch(BaseANN):
             return False
         return response.json()['_shards']["successful"] == 1
 
+    def _wait_create_index(self):
+        start = time.time()
+        index_status = 1
+        while index_status is not 2:
+            response = requests.get(self._master_prefix + "/_cluster/stats")
+            index_status = json.loads(response.text)[0]['partition_infos'][0]["index_status"]
+            time.sleep(2)
+        end = time.time()
+        print("create index consume: ", str(end - start))
+
     def done(self):
-        # self._drop_table()
-        # self._drop_db()
+        self._drop_table()
+        self._drop_db()
         return
 
     def __str__(self):
@@ -219,6 +229,7 @@ class VearchIVFPQ(Vearch):
         self._bulk_insert(X)
         # self._single_insert(X)
         self._create_index()
+        self._wait_create_index()
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -239,7 +250,7 @@ class VearchIVFPQ(Vearch):
             "sort": [{
                 "_score": {"order": "asc"}
             }],
-            "retrieval_params": {
+            "retrieval_param": {
                 "parallel_on_queries": 0,
                 "recall_num": n,  # should equal to size here
                 "nprobe": self._nprobe,
@@ -308,6 +319,7 @@ class VearchIVFFLAT(Vearch):
         self._create_table(payload)
         self._bulk_insert(X)
         self._create_index()
+        self._wait_create_index()
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
@@ -328,7 +340,7 @@ class VearchIVFFLAT(Vearch):
             "sort": [{
                 "_score": {"order": "asc"}
             }],
-            "retrieval_params": {
+            "retrieval_param": {
                 "parallel_on_queries": 0,
                 "nprobe": self._nprobe,
                 "metric_type": self._metric_type
@@ -395,8 +407,9 @@ class VearchHNSW(Vearch):
         }
         self._create_table(payload)
         self._bulk_insert(X)
-        # self._single_insert(X)
         self._create_index()
+        self._wait_create_index()
+        # self._single_insert(X)
 
     def set_query_arguments(self, efSearch):
         self._efSearch = efSearch
@@ -506,7 +519,7 @@ class VearchGPU(Vearch):
             "sort": [{
                 "_score": {"order": "asc"}
             }],
-            "retrieval_params": {
+            "retrieval_param": {
                 "parallel_on_queries": 0,
                 "recall_num": n,  # should equal to size here
                 "nprobe": self._nprobe,

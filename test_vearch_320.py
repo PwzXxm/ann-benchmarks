@@ -77,23 +77,25 @@ def test_ivfflat():
     client = VearchIVFFLAT(metric_type, ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
-    # client.fit(vectors)
+    client.fit(vectors)
     # client._create_index()
     qs = numpy.array([f['test'][0]])
     topk = 100
-    nprobe = 200
-    client.set_query_arguments(nprobe)
-    client.batch_query(qs, topk)
-    ids = client.get_batch_results()
-    # print(ids)
-    stds = numpy.array(f['neighbors'])
-    recall = 0.0
-    for i in range(len(ids)):
-        print("recall: ", compute_recall(stds[i], ids[i]))
-        recall += compute_recall(stds[i], ids[i])
-    print("average recall: ", recall / len(ids))
-
-    # client.done()
+    # nprobe = 200
+    for nprobe in range(10, 2000, 200):
+        print(f"nprobe: {nprobe}")
+        client.set_query_arguments(nprobe)
+        client.batch_query(qs, topk)
+        ids = client.get_batch_results()
+        # print(ids)
+        stds = numpy.array(f['neighbors'])
+        recall = 0.0
+        for i in range(len(ids)):
+            print("recall: ", compute_recall(stds[i], ids[i]))
+            recall += compute_recall(stds[i], ids[i])
+        print("average recall: ", recall / len(ids))
+        print("\n")
+    client.done()
     f.close()
 
 
@@ -125,7 +127,7 @@ def test_gpu():
 
 
 if __name__ == "__main__":
-    test_hnsw()
+    # test_hnsw()
     # test_ivfpq()
-    # test_ivfflat()
+    test_ivfflat()
     # test_gpu()
