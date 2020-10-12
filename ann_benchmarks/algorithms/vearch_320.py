@@ -34,6 +34,7 @@ class Vearch(BaseANN):
         self._router_port = '9001'  # docker
         self._master_prefix = 'http://' + self._master_host + ':' + self._master_port
         self._router_prefix = 'http://' + self._router_host + ':' + self._router_port
+        self._partition_id = None
 
     def _drop_db(self):
         url = self._master_prefix + '/db/' + self._db_name
@@ -161,19 +162,32 @@ class Vearch(BaseANN):
             return False
         return response.json()['_shards']["successful"] == 1
 
+    def _get_partition_id(self):
+        if self._partition_id: return self._partition_id
+        url = self._master_prefix + '/space/' + self._db_name + '/' + self._table_name
+        response = requests.get(url)
+        partition_id = response.json()['data']['partitions'][0]['id']
+        self._partition_id = partition_id
+        return self._partition_id
+
     def _wait_create_index(self):
         start = time.time()
-        index_status = 1
+        index_status = 0
+        pid = self._get_partition_id()
         while index_status is not 2:
-            response = requests.get(self._master_prefix + "/_cluster/stats")
-            index_status = json.loads(response.text)[0]['partition_infos'][0]["index_status"]
             time.sleep(2)
+            response = requests.get(self._master_prefix + "/_cluster/stats")
+            partition_infos = json.loads(response.text)[0]['partition_infos']
+            for partition_info in partition_infos:
+                if partition_info["pid"] == pid:
+                    index_status = partition_info["index_status"]
+                    break
         end = time.time()
         print("create index consume: ", str(end - start))
 
     def done(self):
-        #self._drop_table()
-        #self._drop_db()
+        # self._drop_table()
+        # self._drop_db()
         return
 
     def __str__(self):
