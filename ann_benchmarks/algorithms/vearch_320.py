@@ -413,7 +413,8 @@ class VearchHNSW(Vearch):
                 }
             }
         }
-        self._create_table(payload)
+        insert_flag = self._create_table(payload)
+        if not insert_flag: return
         self._bulk_insert(X)
         self._create_index()
         self._wait_create_index()
