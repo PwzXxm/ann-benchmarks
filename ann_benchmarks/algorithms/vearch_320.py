@@ -21,8 +21,8 @@ def _name_in_dict_list(dlist, name):
 
 class Vearch(BaseANN):
     def __init__(self):
-        self._db_name = 'annbench'
-        self._table_name = 'annbench'
+        self._db_name = 'annbench1'
+        self._table_name = 'annbench1'
         self._field = 'field1'
         # self._master_host = '172.16.0.251'
         # self._master_port = '443'
