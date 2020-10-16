@@ -3,7 +3,6 @@ import numpy
 import os
 import random
 import sys
-import progressbar
 
 from urllib.request import urlopen
 from urllib.request import urlretrieve
@@ -40,25 +39,17 @@ def get_dataset_fn(dataset):
 
 
 def get_dataset(which):
-    npy_fn = os.path.join('data', '%s.npy' % which)
-    data_q = numpy.load(npy_fn)
-    D = {
-        "test": data_q[:1000],
-        "distance": [],
-        "train": []
-    }
-    return D
-    # hdf5_fn = get_dataset_fn(which)
-    # try:
-    #     url = 'http://ann-benchmarks.com/%s.hdf5' % which
-    #     # download(url, hdf5_fn)
-    # except:
-    #     print("Cannot download %s" % url)
-    #     if which in DATASETS:
-    #         print("Creating dataset locally")
-    #         DATASETS[which](hdf5_fn)
-    # hdf5_f = h5py.File(hdf5_fn, 'r')
-    # return hdf5_f
+    hdf5_fn = get_dataset_fn(which)
+    try:
+        url = 'http://ann-benchmarks.com/%s.hdf5' % which
+        # download(url, hdf5_fn)
+    except:
+        print("Cannot download %s" % url)
+        if which in DATASETS:
+            print("Creating dataset locally")
+            DATASETS[which](hdf5_fn)
+    hdf5_f = h5py.File(hdf5_fn, 'r')
+    return hdf5_f
 
 
 # Everything below this line is related to creating datasets
