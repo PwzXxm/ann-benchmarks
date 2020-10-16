@@ -125,7 +125,9 @@ def test_gpu():
 
 
 if __name__ == "__main__":
+    data_q = numpy.load("/Users/yuxingyuan/query.npy")
+    data_q
     # test_hnsw()
     # test_ivfpq()
-    test_ivfflat()
+    # test_ivfflat()
     # test_gpu()

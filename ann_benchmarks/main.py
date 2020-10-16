@@ -135,7 +135,8 @@ def main():
     dataset = get_dataset(args.dataset)
     dimension = len(dataset['train'][0])  # TODO(erikbern): ugly
     point_type = dataset.attrs.get('point_type', 'float')
-    distance = dataset.attrs['distance']
+    # distance = dataset.attrs['distance']
+    distance ='euclidean'
     definitions = get_definitions(
         args.definitions, dimension, point_type, distance, args.count, args.dataset)
 
