@@ -133,7 +133,8 @@ def main():
         shutil.rmtree(INDEX_DIR)
 
     dataset = get_dataset(args.dataset)
-    dimension = len(dataset['train'][0])  # TODO(erikbern): ugly
+    dimension = len(dataset['test'][0])
+    #dimension = len(dataset['train'][0])  # TODO(erikbern): ugly
     point_type = dataset.attrs.get('point_type', 'float')
     # distance = dataset.attrs['distance']
     distance ='euclidean'
