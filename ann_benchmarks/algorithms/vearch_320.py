@@ -24,6 +24,7 @@ class Vearch(BaseANN):
         self._db_name = 'annbench'
         self._table_name = 'annbench'
         self._field = 'field1'
+        self._field2 = 'field2'
         # self._master_host = '172.16.0.251'
         # self._master_port = '443'
         self._master_host = 'localhost'
@@ -110,6 +111,9 @@ class Vearch(BaseANN):
                 docs += json.dumps({
                     self._field: {
                         "feature": X[j].tolist()
+                    },
+                    self._field2: {
+                        "feature": X[j].tolist()
                     }
                 }) + "\n"
             response = requests.request("POST", url, headers={"Content-Type": "application/json"}, data=docs)
@@ -136,7 +140,7 @@ class Vearch(BaseANN):
         print("query: ", url, ", status: ", response.status_code)
         _check_response(response)
         if response.json():
-            # print(response.json())
+            #print(response.json())
             def _print_all_key(kv, indent=0):
                 if not isinstance(kv, dict):
                     return
@@ -186,7 +190,7 @@ class Vearch(BaseANN):
         print("create index consume: ", str(end - start))
 
     def done(self):
-        # self._drop_table()
+        self._drop_table()
         # self._drop_db()
         return
 
@@ -324,6 +328,12 @@ class VearchIVFFLAT(Vearch):
                     "index": True,
                     "dimension": dimension,
                     "store_type": "RocksDB",
+                },
+                self._field2: {
+                    "type": "vector",
+                    "index": True,
+                    "dimension": dimension,
+                    "store_type": "RocksDB",
                 }
             }
         }
@@ -336,19 +346,30 @@ class VearchIVFFLAT(Vearch):
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
 
-    def batch_query(self, X, n):
+    def batch_query1(self, X, X2, n):
         features = []
+        features2 = []
         for vector in X:
             # features.append(vector.tolist())
             features += vector.tolist()
+        for vector in X2:
+            # features.append(vector.tolist())
+            features2 += vector.tolist()
         payload = {
             "query": {
-                "sum": [{
-                    "field": self._field,
-                    "feature": features,
-                }]
+                "sum": [
+                    # {
+                    #     "field": self._field,
+                    #     "feature": features,
+                    # },
+                    {
+                        "field": self._field2,
+                        "feature": features2,
+                        "max_score": 100000.0,
+                    }
+                ]
             },
-            "size": n,
+            # "size": n,
             "sort": [{
                 "_score": {"order": "asc"}
             }],
