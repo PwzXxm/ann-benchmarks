@@ -26,11 +26,11 @@ class Vearch(BaseANN):
         self._field = 'field1'
         # self._master_host = '172.16.70.1'
         # self._router_host = '172.16.70.1'
-        self._master_host = '10.100.20.55'
-        self._router_host = '10.100.20.55'
+        # self._master_host = '10.100.20.55'
+        # self._router_host = '10.100.20.55'
         # self._master_port = '443'
-        # self._master_host = 'localhost'
-        # self._router_host = 'localhost'
+        self._master_host = 'localhost'
+        self._router_host = 'localhost'
         self._master_port = '8817'  # docker
         # self._router_port = '80'
         self._router_port = '9001'  # docker
@@ -116,7 +116,9 @@ class Vearch(BaseANN):
                 }) + "\n"
             response = requests.request("POST", url, headers={"Content-Type": "application/json"}, data=docs)
             print("bulk insert docs: ", url, ", status: ", response.status_code)
+            print(response.json())
             _check_response(response)
+        return records_len
 
     def _single_insert(self, X):
         records_len = len(X)
@@ -305,6 +307,28 @@ class VearchIVFFLAT(Vearch):
         else:
             self._metric_type = 'InnerProduct'
         self._table_name = f"{self._table_name}_{ncentroids}"
+        self._already_nums = 0
+
+    def already_fit(self, total_num):
+        return False
+
+    def support_batch_fit(self):
+        return True
+
+    def get_already_num(self):
+        has_table = self._table_exists()
+        if has_table:
+            pid = self._get_partition_id()
+            try:
+                response = requests.get(self._master_prefix + "/_cluster/stats")
+                partition_infos = json.loads(response.text)[0]['partition_infos']
+                for partition_info in partition_infos:
+                    if partition_info["pid"] == pid:
+                        return partition_info["doc_num"]
+            except Exception as e:
+                print(e)
+                return 0
+        return 0
 
     def fit(self, X):
         self._create_db()
@@ -342,6 +366,49 @@ class VearchIVFFLAT(Vearch):
         self._bulk_insert(X)
         self._create_index()
         self._wait_create_index()
+
+    def batch_fit(self, X, total_num):
+        assert self.get_already_num() < total_num
+        print("already num from vearch",self.get_already_num())
+        print("already num: ", self._already_nums)
+
+        if self._already_nums == 0:
+            self._create_db()
+            max_size = total_num
+            index_size = min(max_size, self._ncentroids * 128)
+            dimension = X.shape[1]
+            retrieval_type = "IVFFLAT"
+            retrieval_param = {
+                "ncentroids": self._ncentroids,
+                "metric_type": self._metric_type,
+                # "nprobe": 80, # vearch default, what a shit here!
+            }
+            payload = {
+                "name": self._table_name,
+                "partition_num": self._partition_num,
+                "replica_num": self._replica_num,
+                "engine": {
+                    "name": "gamma",
+                    "index_size": index_size,
+                    "max_size": max_size,
+                    "retrieval_type": retrieval_type,
+                    "retrieval_param": retrieval_param
+                },
+                "properties": {
+                    self._field: {
+                        "type": "vector",
+                        "index": True,
+                        "dimension": dimension,
+                        "store_type": "RocksDB",
+                    }
+                }
+            }
+            self._create_table(payload)
+        insert_num = self._bulk_insert(X)
+        self._already_nums += insert_num
+        if self._already_nums >= total_num:
+            self._create_index()
+            self._wait_create_index()
 
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)

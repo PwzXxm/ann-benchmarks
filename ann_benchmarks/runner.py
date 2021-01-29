@@ -158,7 +158,8 @@ function""" % (definition.module, definition.constructor, definition.arguments)
         if not algo.already_fit(train_size):
             if algo.support_batch_fit():
                 print('got a train set of size (%d * %d)' % (train_size, len(D['train'][0])), flush=True)
-                num_per_batch = 1000000
+                num_per_batch = 100000
+                # num_per_batch = 1000000
                 for i in range(0, train_size, num_per_batch):
                     print('[{}] begin fit {}th vector ...'.format(datetime.datetime.now(), i), flush=True)
                     end = min(i + num_per_batch, train_size)
