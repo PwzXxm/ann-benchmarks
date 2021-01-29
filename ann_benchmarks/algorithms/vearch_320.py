@@ -24,13 +24,15 @@ class Vearch(BaseANN):
         self._db_name = 'annbench'
         self._table_name = 'annbench'
         self._field = 'field1'
-        # self._master_host = '172.16.0.251'
+        # self._master_host = '172.16.70.1'
+        # self._router_host = '172.16.70.1'
+        self._master_host = '10.100.20.55'
+        self._router_host = '10.100.20.55'
         # self._master_port = '443'
-        self._master_host = 'localhost'
+        # self._master_host = 'localhost'
+        # self._router_host = 'localhost'
         self._master_port = '8817'  # docker
-        # self._router_host = '172.16.0.251'
         # self._router_port = '80'
-        self._router_host = 'localhost'
         self._router_port = '9001'  # docker
         self._master_prefix = 'http://' + self._master_host + ':' + self._master_port
         self._router_prefix = 'http://' + self._router_host + ':' + self._router_port
@@ -176,12 +178,17 @@ class Vearch(BaseANN):
         pid = self._get_partition_id()
         while index_status is not 2:
             time.sleep(2)
-            response = requests.get(self._master_prefix + "/_cluster/stats")
-            partition_infos = json.loads(response.text)[0]['partition_infos']
-            for partition_info in partition_infos:
-                if partition_info["pid"] == pid:
-                    index_status = partition_info["index_status"]
-                    break
+            try:
+                response = requests.get(self._master_prefix + "/_cluster/stats")
+                partition_infos = json.loads(response.text)[0]['partition_infos']
+                for partition_info in partition_infos:
+                    if partition_info["pid"] == pid:
+                        index_status = partition_info["index_status"]
+                        break
+
+            except Exception as e:
+                print(e)
+                time.sleep(20)
         end = time.time()
         print("create index consume: ", str(end - start))
 

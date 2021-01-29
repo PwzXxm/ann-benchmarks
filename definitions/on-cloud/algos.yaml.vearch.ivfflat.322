@@ -1,0 +1,11 @@
+float:
+  euclidean:
+    vearch-ivfflat:
+      docker-tag: nothing-use-local
+      module: ann_benchmarks.algorithms.vearch_320
+      constructor: VearchIVFFLAT
+      base-args: ["@metric"]
+      run-groups:
+        nlist-2048:
+          args: [[2048]]
+          query-args: [[15, 13, 12, 11, 10, 9, 8]]

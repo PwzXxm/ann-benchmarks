@@ -15,8 +15,8 @@ def compute_recall(std, answer):
     return hit_nums / len(answer)
 
 
-dataset = 'sift-10000-10'
-# dataset = 'sift-10m'
+# dataset = 'sift-10000-10'
+dataset = 'sift-1m-euclidean'
 
 # metric_type = 'angular'
 metric_type = 'L2'
@@ -73,16 +73,16 @@ def test_ivfpq():
 
 
 def test_ivfflat():
-    ncentroids = 256
+    ncentroids = 8192
     client = VearchIVFFLAT(metric_type, ncentroids)
     f = h5py.File('data/' + dataset + '.hdf5', 'r')
     vectors = numpy.array(f['train'])
     client.fit(vectors)
     # client._create_index()
     qs = numpy.array([f['test'][0]])
-    topk = 100
+    topk = 50
     # nprobe = 200
-    for nprobe in range(10, 2000, 200):
+    for nprobe in range(1, 200, 50):
         print(f"nprobe: {nprobe}")
         client.set_query_arguments(nprobe)
         client.batch_query(qs, topk)
