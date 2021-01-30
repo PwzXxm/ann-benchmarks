@@ -96,7 +96,7 @@ class Vearch(BaseANN):
         _check_response(response)
         return True
 
-    def _bulk_insert(self, X):
+    def _bulk_insert(self, X, already_num=0):
         url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_bulk'
         records_len = len(X)
         step = 2000
@@ -106,7 +106,7 @@ class Vearch(BaseANN):
             for j in range(i, end):
                 docs += json.dumps({
                     "index": {
-                        "_id": j
+                        "_id": j + already_num
                     }
                 }) + "\n"
                 docs += json.dumps({
@@ -116,7 +116,6 @@ class Vearch(BaseANN):
                 }) + "\n"
             response = requests.request("POST", url, headers={"Content-Type": "application/json"}, data=docs)
             print("bulk insert docs: ", url, ", status: ", response.status_code)
-            print(response.json())
             _check_response(response)
         return records_len
 
@@ -310,7 +309,8 @@ class VearchIVFFLAT(Vearch):
         self._already_nums = 0
 
     def already_fit(self, total_num):
-        return False
+        # return False
+        return True
 
     def support_batch_fit(self):
         return True
@@ -369,8 +369,6 @@ class VearchIVFFLAT(Vearch):
 
     def batch_fit(self, X, total_num):
         assert self.get_already_num() < total_num
-        print("already num from vearch",self.get_already_num())
-        print("already num: ", self._already_nums)
 
         if self._already_nums == 0:
             self._create_db()
@@ -404,7 +402,7 @@ class VearchIVFFLAT(Vearch):
                 }
             }
             self._create_table(payload)
-        insert_num = self._bulk_insert(X)
+        insert_num = self._bulk_insert(X, self._already_nums)
         self._already_nums += insert_num
         if self._already_nums >= total_num:
             self._create_index()
