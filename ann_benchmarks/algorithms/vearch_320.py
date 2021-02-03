@@ -93,6 +93,8 @@ class Vearch(BaseANN):
         for key, value in retrieval_param.items():
             print(key, ": ", value)
         print("status: ", response.status_code)
+        print(payload)
+        print(response.json())
         _check_response(response)
         return True
 
@@ -296,20 +298,17 @@ class VearchIVFPQ(Vearch):
 
 
 class VearchIVFFLAT(Vearch):
-    def __init__(self, metric_type, ncentroids, partition_num=1, replica_num=1):
+    def __init__(self, metric_type, ncentroids, partition_num=3, replica_num=1):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
         self._partition_num = partition_num
         self._replica_num = replica_num
-        if metric_type == 'L2':
-            self._metric_type = 'L2'
-        else:
-            self._metric_type = 'InnerProduct'
+        self._metric_type = {'angular': 'InnerProduct', 'euclidean': 'L2'}[metric_type]
         self._table_name = f"{self._table_name}_{ncentroids}"
         self._already_nums = 0
 
     def already_fit(self, total_num):
-        # return False
+        #return False
         return True
 
     def support_batch_fit(self):
@@ -426,6 +425,7 @@ class VearchIVFFLAT(Vearch):
             "size": n,
             "sort": [{
                 "_score": {"order": "asc"}
+                # "_score": {"order": "desc"}
             }],
             "retrieval_param": {
                 "parallel_on_queries": 0,
