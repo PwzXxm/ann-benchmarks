@@ -155,12 +155,13 @@ function""" % (definition.module, definition.constructor, definition.arguments)
         t0 = time.time()
         memory_usage_before = algo.get_memory_usage()
         train_size = len(D['train'])
+        start = 0
         if not algo.already_fit(train_size):
             if algo.support_batch_fit():
                 print('got a train set of size (%d * %d)' % (train_size, len(D['train'][0])), flush=True)
-                num_per_batch = 100000
+                num_per_batch = 1000000
                 # num_per_batch = 1000000
-                for i in range(0, train_size, num_per_batch):
+                for i in range(start, train_size, num_per_batch):
                     print('[{}] begin fit {}th vector ...'.format(datetime.datetime.now(), i), flush=True)
                     end = min(i + num_per_batch, train_size)
                     X_train = numpy.array(D['train'][i:end])
