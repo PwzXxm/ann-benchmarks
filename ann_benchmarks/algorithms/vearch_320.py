@@ -37,7 +37,8 @@ class Vearch(BaseANN):
         self._master_prefix = 'http://' + self._master_host + ':' + self._master_port
         self._router_prefix = 'http://' + self._router_host + ':' + self._router_port
         self._router_prefix2 = 'http://' + self._router_host + ':' + '9002'
-        self._router_prefixes = [self._router_prefix, self._router_prefix2]
+        self._router_prefix3 = 'http://' + self._router_host + ':' + '9003'
+        self._router_prefixes = [self._router_prefix, self._router_prefix2, self._router_prefix3]
         self._partition_id = None
 
     def _drop_db(self):
@@ -173,7 +174,7 @@ class Vearch(BaseANN):
         if self._partition_id: return self._partition_id
         url = self._master_prefix + '/space/' + self._db_name + '/' + self._table_name
         response = requests.get(url)
-        partition_id = response.json()['data']['partitions'][0]['id']
+        partition_id = [i['id'] for i in response.json()['data']['partitions']]
         self._partition_id = partition_id
         return self._partition_id
 
@@ -187,7 +188,7 @@ class Vearch(BaseANN):
                 response = requests.get(self._master_prefix + "/_cluster/stats")
                 partition_infos = json.loads(response.text)[0]['partition_infos']
                 for partition_info in partition_infos:
-                    if partition_info["pid"] == pid:
+                    if partition_info["pid"] in pid:
                         index_status = partition_info["index_status"]
                         break
 
@@ -324,9 +325,11 @@ class VearchIVFFLAT(Vearch):
             try:
                 response = requests.get(self._master_prefix + "/_cluster/stats")
                 partition_infos = json.loads(response.text)[0]['partition_infos']
+                number = 0
                 for partition_info in partition_infos:
-                    if partition_info["pid"] == pid:
-                        return partition_info["doc_num"]
+                    if partition_info["pid"] in pid:
+                        number += partition_info["doc_num"]
+                return number
             except Exception as e:
                 print(e)
                 return 0
