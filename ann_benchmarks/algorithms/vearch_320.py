@@ -26,16 +26,18 @@ class Vearch(BaseANN):
         self._field = 'field1'
         # self._master_host = '172.16.70.1'
         # self._router_host = '172.16.70.1'
-        # self._master_host = '10.100.20.55'
-        # self._router_host = '10.100.20.55'
+        self._master_host = '10.100.20.55'
+        self._router_host = '10.100.20.55'
         # self._master_port = '443'
-        self._master_host = 'localhost'
-        self._router_host = 'localhost'
+        # self._master_host = 'localhost'
+        # self._router_host = 'localhost'
         self._master_port = '8817'  # docker
         # self._router_port = '80'
         self._router_port = '9001'  # docker
         self._master_prefix = 'http://' + self._master_host + ':' + self._master_port
         self._router_prefix = 'http://' + self._router_host + ':' + self._router_port
+        self._router_prefix2 = 'http://' + self._router_host + ':' + '9002'
+        self._router_prefixes = [self._router_prefix, self._router_prefix2]
         self._partition_id = None
 
     def _drop_db(self):
@@ -306,9 +308,10 @@ class VearchIVFFLAT(Vearch):
         self._metric_type = {'angular': 'InnerProduct', 'euclidean': 'L2'}[metric_type]
         self._table_name = f"{self._table_name}_{ncentroids}"
         self._already_nums = 0
+        self._res = []
 
     def already_fit(self, total_num):
-        #return False
+        # return False
         return True
 
     def support_batch_fit(self):
@@ -410,30 +413,68 @@ class VearchIVFFLAT(Vearch):
     def set_query_arguments(self, nprobe):
         self._nprobe = min(nprobe, self._ncentroids)
 
+    def _batchquerys_with_payload(self, payload, start, length, i):
+        self._res[start:start + length] = [0] * length
+
+        url = self._router_prefixes[i] + '/' + self._db_name + '/' + self._table_name + '/_msearch'
+        response = requests.post(url, json=payload)
+        print("query: ", url, ", status: ", response.status_code)
+        _check_response(response)
+        if response.json():
+            # print(response.json())
+            def _print_all_key(kv, indent=0):
+                if not isinstance(kv, dict):
+                    return
+                for key, value in kv.items():
+                    print('\t' * indent + key + ':')
+                    if isinstance(value, dict):
+                        _print_all_key(value, indent + 1)
+                    if isinstance(value, list) and value:
+                        _print_all_key(value[0], indent + 1)
+
+            tmp_res = [[int(hit['_id']) for hit in results['hits']['hits']]
+                       for results in response.json()['results']]
+            self._res[start:start + length] = tmp_res
+
     def batch_query(self, X, n):
+        from multiprocessing.pool import ThreadPool
+        pool = ThreadPool(5)
+        routers = len(self._router_prefixes)
         features = []
+        nq, dim = X.shape
+        step = int(nq / routers)
         for vector in X:
             # features.append(vector.tolist())
             features += vector.tolist()
-        payload = {
-            "query": {
-                "sum": [{
-                    "field": self._field,
-                    "feature": features,
-                }]
-            },
-            "size": n,
-            "sort": [{
-                "_score": {"order": "asc"}
-                # "_score": {"order": "desc"}
-            }],
-            "retrieval_param": {
-                "parallel_on_queries": 0,
-                "nprobe": self._nprobe,
-                "metric_type": self._metric_type
+        res_list = []
+        for i in range(routers):
+            start_idx = i * step
+            end_idx = (i + 1) * step
+            if i == routers - 1:
+                end_idx = nq
+            payload = {
+                "query": {
+                    "sum": [{
+                        "field": self._field,
+                        "feature": features[start_idx * dim:end_idx * dim],
+                    }]
+                },
+                "size": n,
+                "sort": [{
+                    "_score": {"order": "asc"}
+                    # "_score": {"order": "desc"}
+                }],
+                "retrieval_param": {
+                    "parallel_on_queries": 0,
+                    "nprobe": self._nprobe,
+                    "metric_type": self._metric_type
+                }
             }
-        }
-        self._batch_query_with_payload(payload)
+
+            res = pool.apply_async(self._batchquerys_with_payload, (payload, start_idx, end_idx - start_idx, i))
+            res_list.append(res)
+            # self._batchquerys_with_payload(payload, start_idx, end_idx - start_idx, i)
+        [i.get() for i in res_list]
 
     def __str__(self):
         return ("VearchIVFFLAT" +
