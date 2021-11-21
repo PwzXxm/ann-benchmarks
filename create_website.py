@@ -278,7 +278,7 @@ def load_all_results():
     # {position: [sdn, properties, idx, ms]}
     cache = collections.OrderedDict()
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=32) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
         future_results = {executor.submit(process, (c, p, r, f))
                           for c, (p, r, f) in enumerate(results.load_all_results_v2())}
         for future in concurrent.futures.as_completed(future_results):

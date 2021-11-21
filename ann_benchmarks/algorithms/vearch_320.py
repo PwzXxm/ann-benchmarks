@@ -29,6 +29,8 @@ class Vearch(BaseANN):
         # self._master_host = '10.100.20.55'
         # self._router_host = '10.100.20.55'
         # self._master_port = '443'
+        self._master_host = '10.15.253.6'
+        self._router_host = '10.15.254.96'
         self._master_host = 'localhost'
         self._router_host = 'localhost'
         self._master_port = '8817'  # docker
@@ -161,7 +163,7 @@ class Vearch(BaseANN):
     def _create_index(self):
         url = self._router_prefix + '/' + self._db_name + '/' + self._table_name + '/_forcemerge'
         response = requests.post(url)
-        print("create index : ", url, ", status: ", response.status_code)
+        print("create index : ", url, ", status: ", response.status_code, flush=True)
         _check_response(response)
         if not response.json()['_shards']:
             return False
@@ -176,6 +178,7 @@ class Vearch(BaseANN):
         return self._partition_id
 
     def _wait_create_index(self):
+        print("wait for creating index", flush=True)
         start = time.time()
         index_status = 0
         pid = self._get_partition_id()
@@ -298,21 +301,22 @@ class VearchIVFPQ(Vearch):
 
 
 class VearchIVFFLAT(Vearch):
-    def __init__(self, metric_type, ncentroids, partition_num=3, replica_num=1):
+    def __init__(self, metric_type, ncentroids, partition_num=2, replica_num=1):
         Vearch.__init__(self)
         self._ncentroids = ncentroids
         self._partition_num = partition_num
         self._replica_num = replica_num
         self._metric_type = {'angular': 'InnerProduct', 'euclidean': 'L2'}[metric_type]
+        self._order = "asc" if self._metric_type == 'L2' else "desc"
         self._table_name = f"{self._table_name}_{ncentroids}"
         self._already_nums = 0
 
     def already_fit(self, total_num):
-        #return False
-        return True
+        return False
+        # return True
 
     def support_batch_fit(self):
-        return True
+        return False
 
     def get_already_num(self):
         has_table = self._table_exists()
@@ -356,7 +360,7 @@ class VearchIVFFLAT(Vearch):
                     "type": "vector",
                     "index": True,
                     "dimension": dimension,
-                    "store_type": "RocksDB",
+                    "store_type": "RocksDB"
                 }
             }
         }
@@ -365,6 +369,9 @@ class VearchIVFFLAT(Vearch):
         self._bulk_insert(X)
         self._create_index()
         self._wait_create_index()
+
+        # insert still happens after index.status == 2
+        time.sleep(15*60)
 
     def batch_fit(self, X, total_num):
         assert self.get_already_num() < total_num
@@ -396,7 +403,7 @@ class VearchIVFFLAT(Vearch):
                         "type": "vector",
                         "index": True,
                         "dimension": dimension,
-                        "store_type": "RocksDB",
+                        "store_type": "RocksDB"
                     }
                 }
             }
@@ -424,7 +431,7 @@ class VearchIVFFLAT(Vearch):
             },
             "size": n,
             "sort": [{
-                "_score": {"order": "asc"}
+                "_score": {"order": self._order}
                 # "_score": {"order": "desc"}
             }],
             "retrieval_param": {
@@ -447,14 +454,12 @@ class VearchIVFFLAT(Vearch):
 
 
 class VearchHNSW(Vearch):
-    def __init__(self, metric_type, nlinks, efConstruction, partition_num=1, replica_num=1):
+    def __init__(self, metric_type, nlinks, efConstruction, partition_num=2, replica_num=1):
         Vearch.__init__(self)
         self._partition_num = partition_num
         self._replica_num = replica_num
-        if metric_type == 'L2':
-            self._metric_type = 'L2'
-        else:
-            self._metric_type = 'InnerProduct'
+        self._metric_type = {'angular': 'InnerProduct', 'euclidean': 'L2'}[metric_type]
+        self._order = "asc" if self._metric_type == 'L2' else "desc"
         self._nlinks = nlinks
         self._efConstruction = efConstruction
         self._table_name = f"{self._table_name}_{nlinks}_{efConstruction}"
@@ -487,7 +492,7 @@ class VearchHNSW(Vearch):
                     "type": "vector",
                     "index": True,
                     "dimension": dimension,
-                    "store_type": "MemoryOnly",
+                    "store_type": "MemoryOnly"
                 }
             }
         }
@@ -497,6 +502,8 @@ class VearchHNSW(Vearch):
         self._create_index()
         self._wait_create_index()
         # self._single_insert(X)
+
+        time.sleep(15*60)
 
     def set_query_arguments(self, efSearch):
         self._efSearch = efSearch
@@ -509,16 +516,16 @@ class VearchHNSW(Vearch):
             "query": {
                 "sum": [{
                     "field": self._field,
-                    "feature": features,
+                    "feature": features
                 }]
             },
             "size": n,
             "sort": [{
-                "_score": {"order": "asc"}
+                "_score": {"order": self._order}
             }],
             "retrieval_param": {
                 "metric_type": self._metric_type,
-                "efSearch": self._efSearch,
+                "efSearch": self._efSearch
             }
         }
         self._batch_query_with_payload(payload)
